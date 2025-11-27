@@ -44,6 +44,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
 
+  <!-- Custom styles to hide download button -->
+  <style>
+    /* Hide Spotlight download button */
+    .spl-button[aria-label="Download"],
+    .spl-download,
+    .spl-controls button[title*="Download"],
+    .spl-controls button[aria-label*="Download"] {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+    
+    /* Hide any download icon in controls */
+    .spl-controls [class*="download"] {
+      display: none !important;
+    }
+  </style>
+
   <!-- JSON-LD Schema -->
 
   <!-- Geo Meta Tags for Local SEO -->
@@ -519,7 +537,7 @@
   }
 
   // Apply download restrictions to videos
-  function applyDownloadProtection() {
+  function applyDownloadProtection() {  
     setTimeout(() => {
       document.querySelectorAll('video').forEach(video => {
         video.setAttribute('controlsList', 'nodownload');
@@ -545,25 +563,41 @@
       }
     });
     
+    setTimeout(() => {
+      Spotlight.init({
+        autoplay: true,
+        controls: true,
+        download: false,
+        control: ['close', 'zoom'], // Only show close and zoom controls
+        showControls: 'auto'
+      });
+      
+      // Apply download protection after Spotlight loads
       setTimeout(() => {
-  Spotlight.init({
-    autoplay: true,
-    controls: true,
-    download: false,
-    control: ['close', 'zoom'] // Only show close and zoom controls
-  });
-  
-  // Apply download protection after Spotlight loads
-  setTimeout(() => {
-    // Apply video attributes
-    document.querySelectorAll('video').forEach(video => {
-      video.setAttribute('controlsList', 'nodownload');
-      video.setAttribute('oncontextmenu', 'return false;');
-      video.removeAttribute('download');
-      video.disablePictureInPicture = true;
-    });
-  }, 800);
-}, 100);
+        // Hide any download buttons that might appear
+        document.querySelectorAll('[aria-label="Download"], [title="Download"], .spl-download').forEach(btn => {
+          btn.style.display = 'none';
+          btn.style.visibility = 'hidden';
+          btn.style.pointerEvents = 'none';
+        });
+        
+        // Apply video attributes
+        document.querySelectorAll('video').forEach(video => {
+          video.setAttribute('controlsList', 'nodownload');
+          video.setAttribute('oncontextmenu', 'return false;');
+          video.removeAttribute('download');
+          video.disablePictureInPicture = true;
+          
+          // Intercept any right-click attempts on video element
+          video.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            return false;
+          });
+        });
+        
+        applyDownloadProtection();
+      }, 600);
+    }, 100);
   }
 
   // Category filter with smooth scroll
@@ -602,7 +636,7 @@
       const footer = document.querySelector('.spl-footer');
       
       if (footer) {
-        console.log('✅ Footer found!');
+        
         clearInterval(checkForFooter);
         
         function showAndHideFooter() {
@@ -613,7 +647,6 @@
           hideTimer = setTimeout(() => {
             footer.style.opacity = '0';
             footer.style.pointerEvents = 'none';
-            console.log('Footer hidden');
           }, 3000);
         }
         
@@ -621,7 +654,6 @@
         
         document.addEventListener('click', (e) => {
           if (e.target.closest('.spl-prev') || e.target.closest('.spl-next') || e.target.closest('.spl-track')) {
-            console.log('User interaction - showing footer');
             showAndHideFooter();
           }
         });
@@ -634,9 +666,9 @@
 
   // Initial load
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page loaded');
     renderVideos('all');
     setupFooterHiding();
+    applyDownloadProtection();
   });
 
 </script>
